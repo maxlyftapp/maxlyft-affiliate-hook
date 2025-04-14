@@ -33,7 +33,8 @@ export default async function handler(req, res) {
     });
 
     const result = await response.json();
-    console.log('✅ FirstPromoter response:', result);
+    console.log("Sending this payload to FirstPromoter:", payload);
+    console.log("FirstPromoter response:", result);
     res.status(200).json({ success: true, result });
   } catch (err) {
     console.error('🔥 FirstPromoter ERROR:', err);

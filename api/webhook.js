@@ -4,16 +4,30 @@ export default async function handler(req, res) {
   }
 
   const event = req.body;
-  await fetch("https://webhook.site/a5ed0e76-3a96-4dc4-985c-e9f406988723", {
-  method: "POST",
-  headers: { "Content-Type": "application/json" },
-  body: JSON.stringify(req.body),
-});
 
+  // Debug webhook payload by sending to webhook.site
+  await fetch("https://webhook.site/a5ed0e76-3a96-4dc4-985c-e9f406988723", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(event),
+  });
 
   const email = event?.subscriber_attributes?.email?.value;
   const eventId = event?.event_id || event?.id || `evt_${Date.now()}`;
-  const amountCents = event?.amount_cents || 100;
+  const productId = event?.product_id;
+
+  // Determine which plan the user subscribed to
+  let plan;
+  if (productId === "maxlyft_monthly") {
+    plan = "maxlyft-monthly";
+  } else if (productId === "maxlyft_yearly") {
+    plan = "maxlyft-yearly";
+  } else {
+    console.log('❌ Unknown product_id or missing');
+    return res.status(400).json({ error: 'Invalid or missing product_id' });
+  }
+
+  const amountCents = event?.amount_cents || (plan === "maxlyft-yearly" ? 999 : 99); // fallback if needed
 
   if (!eventId) {
     console.log('❌ Missing eventId');
@@ -22,7 +36,7 @@ export default async function handler(req, res) {
 
   const payload = {
     event_id: eventId,
-    plan: "maxlyft-monthly",
+    plan,
     amount_cents: amountCents,
     ...(email && { email })
   };
@@ -38,8 +52,8 @@ export default async function handler(req, res) {
     });
 
     const result = await response.json();
-    console.log("Sending this payload to FirstPromoter:", payload);
-    console.log("FirstPromoter response:", result);
+    console.log("✅ Payload sent to FirstPromoter:", payload);
+    console.log("📨 FirstPromoter response:", result);
     res.status(200).json({ success: true, result });
   } catch (err) {
     console.error('🔥 FirstPromoter ERROR:', err);

@@ -4,19 +4,21 @@ export default async function handler(req, res) {
   }
 
   const event = req.body;
+  console.log('Incoming event:', JSON.stringify(event, null, 2));
+
   const email = event?.subscriber_attributes?.email?.value;
   const eventId = event?.event_id || event?.id || `evt_${Date.now()}`;
   const amountCents = event?.amount_cents || 100;
 
-  if (!email || !eventId) {
-    return res.status(400).json({ error: 'Missing required email or event ID' });
+  if (!eventId) {
+    return res.status(400).json({ error: 'Missing required event ID' });
   }
 
   const payload = {
-    email,
     event_id: eventId,
+    plan: "maxlyft-monthly",
     amount_cents: amountCents,
-    plan: "maxlyft-monthly"
+    ...(email && { email }) // only include email if it exists
   };
 
   try {
@@ -36,3 +38,4 @@ export default async function handler(req, res) {
     res.status(500).json({ error: 'Failed to forward to FirstPromoter' });
   }
 }
+

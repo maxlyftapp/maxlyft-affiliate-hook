@@ -4,7 +4,12 @@ export default async function handler(req, res) {
   }
 
   const event = req.body;
-  console.log('🚀 Incoming event from RevenueCat:', JSON.stringify(event, null, 2));
+  await fetch("https://webhook.site/a5ed0e76-3a96-4dc4-985c-e9f406988723", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify(req.body),
+});
+
 
   const email = event?.subscriber_attributes?.email?.value;
   const eventId = event?.event_id || event?.id || `evt_${Date.now()}`;

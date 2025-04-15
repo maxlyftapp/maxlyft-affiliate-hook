@@ -3,18 +3,19 @@ export default async function handler(req, res) {
     return res.status(405).send('Method Not Allowed');
   }
 
-  const event = req.body;
+  const fullEvent = req.body;
+  const event = fullEvent?.event;
 
-  // Debug webhook payload
+  // Debug: send full payload to webhook.site for inspection
   await fetch("https://webhook.site/a5ed0e76-3a96-4dc4-985c-e9f406988723", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(event),
+    body: JSON.stringify(fullEvent),
   });
 
+  const productId = event?.product_id;
   const email = event?.subscriber_attributes?.email?.value;
   const eventId = event?.event_id || event?.id || `evt_${Date.now()}`;
-  const productId = event?.event?.product_id;
 
   let plan;
   if (productId === "maxlyft.monthly7") {
@@ -22,10 +23,9 @@ export default async function handler(req, res) {
   } else if (productId === "maxlyft.yearly7") {
     plan = "maxlyft-yearly";
   } else {
-    console.log('❌ Unknown or missing product_id:', productId);
+    console.log('❌ Invalid or missing product_id:', productId);
     return res.status(400).json({ error: 'Invalid or missing product_id' });
   }
-
 
   const amountCents = event?.amount_cents || (plan === "maxlyft-yearly" ? 999 : 99);
 
@@ -60,3 +60,4 @@ export default async function handler(req, res) {
     res.status(500).json({ error: 'Failed to forward to FirstPromoter' });
   }
 }
+

@@ -1,74 +1,35 @@
 export default async function handler(req, res) {
-  if (req.method !== 'POST') {
-    return res.status(405).send('Method Not Allowed');
-  }
+  if (req.method !== 'POST') return res.status(405).send('Method Not Allowed');
 
   const fullEvent = req.body;
   const event = fullEvent?.event;
 
-  // Debug: send full payload to webhook.site for inspection
-  await fetch("https://webhook.site/a5ed0e76-3a96-4dc4-985c-e9f406988723", {
+  const referralCode = event?.subscriber_attributes?.referral_code?.value || "none";
+  const userId = event?.subscriber_attributes?.email?.value || event?.app_user_id || "unknown";
+  const productId = event?.product_id || "";
+  const timestamp = new Date().toISOString();
+  const amount = event?.amount_cents ? event.amount_cents / 100 : "";
+  const plan = productId.includes("yearly") ? "Yearly" : productId.includes("monthly") ? "Monthly" : "Unknown";
+
+  const eventName = event?.name || "";
+  let status = "unknown";
+  if (eventName === "INITIAL_PURCHASE") status = "subscribed";
+  else if (eventName === "RENEWAL") status = "renewed";
+  else if (eventName === "CANCELLATION") status = "cancelled";
+
+  // 🟢 Send to Google Sheets Apps Script webhook
+  await fetch("https://script.google.com/macros/s/AKfycbxX7v6HVf_eQPviLJnyVRKAyS7mq0f3GuJ0MQ1hCs1s1W6rq6TLCiYA4kpveqXmjfXx/exec", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(fullEvent),
+    body: JSON.stringify({
+      referral_code: referralCode,
+      user_id: userId,
+      timestamp,
+      plan,
+      amount,
+      status
+    })
   });
 
-  const productId = event?.product_id;
-  const email = event?.subscriber_attributes?.email?.value;
-  const referralCode = event?.subscriber_attributes?.referral_code?.value;
-  const eventId = event?.event_id || event?.id || `evt_${Date.now()}`;
-  const isTest = productId === "test_product";
-
-  let plan;
-  if (productId === "maxlyft.monthly7") {
-    plan = "maxlyft-monthly";
-  } else if (productId === "maxlyft.yearly7") {
-    plan = "maxlyft-yearly";
-  } else if (isTest) {
-    console.log('🧪 Received test event, skipping FirstPromoter forwarding.');
-    return res.status(200).json({ test: true, message: "Test event received. No action taken." });
-  } else {
-    console.log('❌ Invalid or missing product_id:', productId);
-    return res.status(400).json({ error: 'Invalid or missing product_id' });
-  }
-
-  const amountCents = event?.amount_cents || (plan === "maxlyft-yearly" ? 900 : 100);
-
-  if (!eventId) {
-    console.log('❌ Missing eventId');
-    return res.status(400).json({ error: 'Missing required event ID' });
-  }
-
-  const payload = {
-    event_id: eventId,
-    plan,
-    amount_cents: amountCents,
-    ...(email && { email }),
-    ...(referralCode && { referral_code: referralCode }) // ✅ include if available
-  };
-
-  try {
-    const response = await fetch('https://firstpromoter.com/api/v1/track/sale', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${process.env.FIRSTPROMOTER_API_KEY}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(payload)
-    });
-
-    const result = await response.json();
-
-    console.log("✅ Payload sent to FirstPromoter:", payload);
-    console.log("📨 FirstPromoter response:", result);
-
-    if (!response.ok) {
-      throw new Error(`FirstPromoter responded with status ${response.status}: ${JSON.stringify(result)}`);
-    }
-
-    res.status(200).json({ success: true, result });
-  } catch (err) {
-    console.error('🔥 FirstPromoter ERROR:', err);
-    res.status(500).json({ error: 'Failed to forward to FirstPromoter', details: err.message });
-  }
+  res.status(200).json({ success: true });
 }

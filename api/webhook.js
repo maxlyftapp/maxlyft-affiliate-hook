@@ -16,21 +16,16 @@ export default async function handler(req, res) {
   const productId = event?.product_id;
   const email = event?.subscriber_attributes?.email?.value;
   const eventId = event?.event_id || event?.id || `evt_${Date.now()}`;
+  const isTest = productId === "test_product";
 
   let plan;
-
-  // Accept both real and test product IDs
-  if (
-    productId === "maxlyft.monthly7" ||
-    productId === "test_product" || // for testing only
-    productId === "test_maxlyft_monthly"
-  ) {
+  if (productId === "maxlyft.monthly7") {
     plan = "maxlyft-monthly";
-  } else if (
-    productId === "maxlyft.yearly7" ||
-    productId === "test_maxlyft_yearly"
-  ) {
+  } else if (productId === "maxlyft.yearly7") {
     plan = "maxlyft-yearly";
+  } else if (isTest) {
+    console.log('🧪 Received test event, skipping FirstPromoter forwarding.');
+    return res.status(200).json({ test: true, message: "Test event received. No action taken." });
   } else {
     console.log('❌ Invalid or missing product_id:', productId);
     return res.status(400).json({ error: 'Invalid or missing product_id' });
@@ -61,11 +56,17 @@ export default async function handler(req, res) {
     });
 
     const result = await response.json();
+
     console.log("✅ Payload sent to FirstPromoter:", payload);
     console.log("📨 FirstPromoter response:", result);
+
+    if (!response.ok) {
+      throw new Error(`FirstPromoter responded with status ${response.status}: ${JSON.stringify(result)}`);
+    }
+
     res.status(200).json({ success: true, result });
   } catch (err) {
     console.error('🔥 FirstPromoter ERROR:', err);
-    res.status(500).json({ error: 'Failed to forward to FirstPromoter' });
+    res.status(500).json({ error: 'Failed to forward to FirstPromoter', details: err.message });
   }
 }

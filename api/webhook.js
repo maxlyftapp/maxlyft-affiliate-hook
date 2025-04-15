@@ -18,9 +18,18 @@ export default async function handler(req, res) {
   const eventId = event?.event_id || event?.id || `evt_${Date.now()}`;
 
   let plan;
-  if (productId === "maxlyft.monthly7") {
+
+  // Accept both real and test product IDs
+  if (
+    productId === "maxlyft.monthly7" ||
+    productId === "test_product" || // for testing only
+    productId === "test_maxlyft_monthly"
+  ) {
     plan = "maxlyft-monthly";
-  } else if (productId === "maxlyft.yearly7") {
+  } else if (
+    productId === "maxlyft.yearly7" ||
+    productId === "test_maxlyft_yearly"
+  ) {
     plan = "maxlyft-yearly";
   } else {
     console.log('❌ Invalid or missing product_id:', productId);
@@ -60,4 +69,3 @@ export default async function handler(req, res) {
     res.status(500).json({ error: 'Failed to forward to FirstPromoter' });
   }
 }
-

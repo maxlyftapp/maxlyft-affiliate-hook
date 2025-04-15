@@ -15,6 +15,7 @@ export default async function handler(req, res) {
 
   const productId = event?.product_id;
   const email = event?.subscriber_attributes?.email?.value;
+  const referralCode = event?.subscriber_attributes?.referral_code?.value;
   const eventId = event?.event_id || event?.id || `evt_${Date.now()}`;
   const isTest = productId === "test_product";
 
@@ -42,7 +43,8 @@ export default async function handler(req, res) {
     event_id: eventId,
     plan,
     amount_cents: amountCents,
-    ...(email && { email })
+    ...(email && { email }),
+    ...(referralCode && { referral_code: referralCode }) // ✅ include if available
   };
 
   try {

@@ -32,7 +32,7 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: 'Invalid or missing product_id' });
   }
 
-  const amountCents = event?.amount_cents || (plan === "maxlyft-yearly" ? 999 : 99);
+  const amountCents = event?.amount_cents || (plan === "maxlyft-yearly" ? 900 : 100);
 
   if (!eventId) {
     console.log('❌ Missing eventId');

@@ -18,7 +18,7 @@ export default async function handler(req, res) {
   else if (eventName === "CANCELLATION") status = "cancelled";
 
   // 🟢 Send to Google Sheets Apps Script webhook
-  await fetch("https://script.google.com/macros/s/AKfycbxX7v6HVf_eQPviLJnyVRKAyS7mq0f3GuJ0MQ1hCs1s1W6rq6TLCiYA4kpveqXmjfXx/exec", {
+  await fetch("https://script.google.com/macros/s/AKfycbwVZAMzQACVSOEDoCTsN0usFe-z2cTInCqum3RyqGmpyhlcKPdZE9hL4EmBhoq4GmZQ/exec", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({

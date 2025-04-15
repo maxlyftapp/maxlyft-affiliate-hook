@@ -14,7 +14,7 @@ export default async function handler(req, res) {
 
   const email = event?.subscriber_attributes?.email?.value;
   const eventId = event?.event_id || event?.id || `evt_${Date.now()}`;
-  const productId = event?.product_id;
+  const productId = event?.event?.product_id;
 
   let plan;
   if (productId === "maxlyft.monthly7") {
@@ -22,9 +22,10 @@ export default async function handler(req, res) {
   } else if (productId === "maxlyft.yearly7") {
     plan = "maxlyft-yearly";
   } else {
-    console.log('❌ Unknown or missing product_id');
+    console.log('❌ Unknown or missing product_id:', productId);
     return res.status(400).json({ error: 'Invalid or missing product_id' });
   }
+
 
   const amountCents = event?.amount_cents || (plan === "maxlyft-yearly" ? 999 : 99);
 

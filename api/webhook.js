@@ -5,7 +5,7 @@ export default async function handler(req, res) {
 
   const event = req.body;
 
-  // Debug webhook payload by sending to webhook.site
+  // Debug webhook payload
   await fetch("https://webhook.site/a5ed0e76-3a96-4dc4-985c-e9f406988723", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -16,18 +16,17 @@ export default async function handler(req, res) {
   const eventId = event?.event_id || event?.id || `evt_${Date.now()}`;
   const productId = event?.product_id;
 
-  // Determine which plan the user subscribed to
   let plan;
-  if (productId === "maxlyft_monthly") {
+  if (productId === "maxlyft.monthly7") {
     plan = "maxlyft-monthly";
-  } else if (productId === "maxlyft_yearly") {
+  } else if (productId === "maxlyft.yearly7") {
     plan = "maxlyft-yearly";
   } else {
-    console.log('❌ Unknown product_id or missing');
+    console.log('❌ Unknown or missing product_id');
     return res.status(400).json({ error: 'Invalid or missing product_id' });
   }
 
-  const amountCents = event?.amount_cents || (plan === "maxlyft-yearly" ? 999 : 99); // fallback if needed
+  const amountCents = event?.amount_cents || (plan === "maxlyft-yearly" ? 999 : 99);
 
   if (!eventId) {
     console.log('❌ Missing eventId');

@@ -50,5 +50,17 @@ export default async function handler(req, res) {
     console.error("❌ Error forwarding to FirstPromoter:", err);
     res.status(500).json({ message: "Failed to send conversion" });
   }
+  // Add this inside your handler logic
+const googleWebhookURL = "https://script.google.com/macros/s/AKfycbxGkJhAfHJOjsiRRwcvawmEs55lROy6dcqfsaTcR7Gpp0xLpzOrSv470PJNHkj3IQvQbw/exec"; // replace this
+
+await fetch(googleWebhookURL, {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({
+    referral_code: referralCode,
+    amount: 9.99 // or dynamically based on the product
+  })
+});
+
 }
 
